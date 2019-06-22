@@ -1,0 +1,1 @@
+INSERT INTO todos (title,description,dueDate,done) VALUES ("clean fridge","It's a mess","2018-08-27T12:34:56.789Z",false)

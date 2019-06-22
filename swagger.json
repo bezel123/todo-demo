@@ -1,0 +1,506 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0",
+    "title": "To-do List",
+    "description": "This OAS2 (Swagger 2) file represents the Todo-List API that lives at http:localhost:8080.",
+    "contact": {
+      "name": "open knowledge GmbH",
+      "url": "http://www.openknowledge.de",
+      "email": "kontakt@openknowledge.de"
+    },
+    "license": {
+      "name": "Apache 2.0"
+    }
+  },
+  "host": "localhost:9080",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {},
+  "paths": {
+    "/todos/{todo-id}": {
+      "parameters": [
+        {
+          "name": "todo-id",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "description": "The todo identifier."
+        }
+      ],
+      "get": {
+        "operationId": "getTodo",
+        "summary": "Get Todo",
+        "tags": [
+          "Todos"
+        ],
+        "responses": {
+          "200": {
+            "description": "Todo found.",
+            "schema": {
+              "$ref": "#/definitions/todo-full"
+            },
+            "examples": {
+              "application/json": {
+                "id": 1,
+                "title": "clean fridge",
+                "description": "It's a mess",
+                "dueDate": "2018-08-27T12:34:56.789Z",
+                "done": false
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found."
+          }
+        },
+        "parameters": [],
+        "description": "Request an existing todo."
+      },
+      "put": {
+        "operationId": "updateTodo",
+        "summary": "Update Todo",
+        "tags": [
+          "Todos"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/todo-base"
+            },
+            "description": "The modified todo."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Todo updated."
+          },
+          "400": {
+            "description": "Invalid modified todo.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/error-response"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "code": "TITLE_NULL",
+                  "message": "title must not be null"
+                },
+                {
+                  "code": "TITLE_SIZE",
+                  "message": "title size must be between 1 and 30"
+                },
+                {
+                  "code": "DESCRIPTION_SIZE",
+                  "message": "description size must be between 0 and 500"
+                },
+                {
+                  "code": "DUEDATE_NULL",
+                  "message": "dueDate must not be null"
+                },
+                {
+                  "code": "DUEDATE_PATTERN",
+                  "message": "dueDate pattern must match \"yyyy-MM-ddTHH:mm:ssZ\""
+                }
+              ]
+            }
+          },
+          "404": {
+            "description": "Todo not found."
+          }
+        },
+        "description": "Update an existing todo."
+      },
+      "delete": {
+        "operationId": "deleteTodo",
+        "summary": "Delete Todo",
+        "tags": [
+          "Todos"
+        ],
+        "responses": {
+          "204": {
+            "description": "Todo deleted."
+          },
+          "404": {
+            "description": "Todo not found."
+          }
+        },
+        "parameters": [],
+        "description": "Delete an existing todo."
+      }
+    },
+    "/todos": {
+      "post": {
+        "operationId": "createTodo",
+        "summary": "Create Todo",
+        "tags": [
+          "Todos"
+        ],
+        "responses": {
+          "201": {
+            "description": "Todo created.",
+            "schema": {
+              "$ref": "#/definitions/todo-full"
+            },
+            "examples": {
+              "application/json": {
+                "id": 1,
+                "title": "clean fridge",
+                "description": "It's a mess",
+                "dueDate": "2018-08-27T12:34:56.789Z",
+                "done": false
+              }
+            },
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid new todo.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/error-response"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "code": "TITLE_NULL",
+                  "message": "title must not be null"
+                },
+                {
+                  "code": "TITLE_SIZE",
+                  "message": "title size must be between 1 and 30"
+                },
+                {
+                  "code": "DESCRIPTION_SIZE",
+                  "message": "description size must be between 0 and 500"
+                },
+                {
+                  "code": "DUEDATE_NULL",
+                  "message": "dueDate must not be null"
+                },
+                {
+                  "code": "DUEDATE_PATTERN",
+                  "message": "dueDate pattern must match \"yyyy-MM-ddTHH:mm:ssZ\""
+                }
+              ]
+            }
+          }
+        },
+        "description": "Create a new todo.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/todo-base"
+            },
+            "description": "The new todo."
+          }
+        ]
+      },
+      "get": {
+        "operationId": "getTodos",
+        "summary": "List todos",
+        "tags": [
+          "Todos"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "type": "string",
+            "enum": [
+              "all",
+              "unfinished"
+            ],
+            "default": "unfinished",
+            "description": "Filters all or unfinished todos in the response"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "type": "integer",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Maximal number of todos in the response"
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Offset for the todos in the response"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of todos.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/todo-list"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "id": 1,
+                  "title": "clean fridge",
+                  "dueDate": "2018-08-27T12:34:56.789Z",
+                  "done": false
+                },
+                {
+                  "id": 2,
+                  "title": "clean bathrom",
+                  "dueDate": "2018-08-28T09:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 3,
+                  "title": "bring out garbage",
+                  "dueDate": "2018-08-29T11:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 4,
+                  "title": "go to supermarket",
+                  "dueDate": "2018-08-25T14:30:00.000Z",
+                  "done": true
+                },
+                {
+                  "id": 5,
+                  "title": "write user stories",
+                  "dueDate": "2018-09-01T10:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 6,
+                  "title": "pay bills",
+                  "dueDate": "2018-09-01T16:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 7,
+                  "title": "call mum",
+                  "dueDate": "2018-09-01T19:00:00.000Z",
+                  "done": false
+                }
+              ]
+            }
+          },
+          "204": {
+            "description": "Empty list of todos"
+          },
+          "206": {
+            "description": "Partial list of todos.",
+            "schema": {
+              "$ref": "#/definitions/todo-list"
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "id": 1,
+                  "title": "clean fridge",
+                  "dueDate": "2018-08-27T12:34:56.789Z",
+                  "done": false
+                },
+                {
+                  "id": 2,
+                  "title": "clean bathrom",
+                  "dueDate": "2018-08-28T09:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 3,
+                  "title": "bring out garbage",
+                  "dueDate": "2018-08-29T11:00:00.000Z",
+                  "done": false
+                },
+                {
+                  "id": 4,
+                  "title": "go to supermarket",
+                  "dueDate": "2018-08-25T14:30:00.000Z",
+                  "done": true
+                },
+                {
+                  "id": 5,
+                  "title": "write user stories",
+                  "dueDate": "2018-09-01T10:00:00.000Z",
+                  "done": false
+                }
+              ]
+            }
+          },
+          "400": {
+            "description": "Invalid query params",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/error-response"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "code": "STATE_INVALID",
+                  "message": "state must be ALL or UNFINISHED"
+                },
+                {
+                  "code": "LIMIT_MIN",
+                  "message": "limit must be greater or equal to 0"
+                },
+                {
+                  "code": "LIMIT_MAX",
+                  "message": "limit must be less or equal to 10"
+                },
+                {
+                  "code": "OFFSET_MIN",
+                  "message": "offset must be greater or equal to 0"
+                },
+                {
+                  "code": "OFFSET_MAX",
+                  "message": "offset must be less or equal to 100"
+                }
+              ]
+            }
+          }
+        },
+        "description": "Get a list of todos."
+      }
+    }
+  },
+  "parameters": {},
+  "definitions": {
+    "todo-full": {
+      "title": "Full Todo",
+      "allOf": [
+        {
+          "$ref": "#/definitions/todo-base"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      ],
+      "description": "The full todo with identifier used as response object."
+    },
+    "todo-base": {
+      "title": "Base Todo",
+      "type": "object",
+      "description": "A base todo used for creation and modification.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "done": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "dueDate",
+        "done"
+      ]
+    },
+    "error-response": {
+      "type": "object",
+      "title": "Error Response",
+      "description": "Error Response",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "todo-list": {
+      "type": "object",
+      "title": "List Todo",
+      "description": "A reduced todo with identifier used as response object for the todo list.",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "done": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "dueDate",
+        "done"
+      ]
+    }
+  },
+  "tags": [
+    {
+      "name": "Todos"
+    }
+  ],
+  "responses": {
+    "500": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "examples": {
+        "application/json": {
+          "code": "ERROR_CODE",
+          "message": "An internal error occured"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 package com.example.tododemo.Model;
 
-import java.util.Date;
+import java.sql.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,15 +10,15 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "todos")
-public class Todo{
+public class Todo {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int id;
     private String title;
     private String description;
-    private Date dueDate;
+    private java.sql.Date dueDate;
     private boolean done;
-    
+
     public Todo(String title, String description, Date dueDate, boolean done) {
         this.title = title;
         this.description = description;
@@ -39,7 +39,10 @@ public class Todo{
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        if(checkTitleSize(title)){
+            this.title = title;
+        }
+        //TODO: add error
     }
 
     public String getDescription() {
@@ -47,7 +50,10 @@ public class Todo{
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        if(checkDescSize(description)){
+            this.description = description;
+        }
+        //TODO: add error
     }
 
     public Date getDueDate() {
@@ -66,5 +72,12 @@ public class Todo{
         this.done = done;
     }
 
-    
+    private boolean checkTitleSize(String s) {
+        return s.length() >= 1 && s.length() <= 30;
+    }
+
+    private boolean checkDescSize(String s) {
+        return s.length() >= 0 && s.length() <= 500;
+    }
+
 }

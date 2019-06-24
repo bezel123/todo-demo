@@ -1,7 +1,6 @@
-package com.example.tododemo.Model;
+package com.example.tododemo.model;
 
-import java.sql.Date;
-
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,14 +11,21 @@ import javax.persistence.Table;
 @Table(name = "todos")
 public class Todo {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name="id", nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @Column(name="title", nullable = false)
     private String title;
+    @Column(name="description", nullable = false)
     private String description;
-    private java.sql.Date dueDate;
+    @Column(name="duedate", nullable = false)
+    private String dueDate;
+    @Column(name="done", nullable = false)
     private boolean done;
 
-    public Todo(String title, String description, Date dueDate, boolean done) {
+    public Todo(){}
+
+    public Todo(String title, String description, String dueDate, boolean done) throws Exception {
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
@@ -39,10 +45,7 @@ public class Todo {
     }
 
     public void setTitle(String title) {
-        if(checkTitleSize(title)){
             this.title = title;
-        }
-        //TODO: add error
     }
 
     public String getDescription() {
@@ -50,17 +53,14 @@ public class Todo {
     }
 
     public void setDescription(String description) {
-        if(checkDescSize(description)){
             this.description = description;
-        }
-        //TODO: add error
     }
 
-    public Date getDueDate() {
+    public String getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(Date dueDate) {
+    public void setDueDate(String dueDate) {
         this.dueDate = dueDate;
     }
 
@@ -71,13 +71,4 @@ public class Todo {
     public void setDone(boolean done) {
         this.done = done;
     }
-
-    private boolean checkTitleSize(String s) {
-        return s.length() >= 1 && s.length() <= 30;
-    }
-
-    private boolean checkDescSize(String s) {
-        return s.length() >= 0 && s.length() <= 500;
-    }
-
 }

@@ -8,9 +8,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes: 
-      - "./src/resources/sql/:/docker-entrypoint-initdb.d/"
+      - "./src/main/resources/sql/:/docker-entrypoint-initdb.d/"
   app:
-    build:
+    image: todo-demo
+    build: 
       context: .
     ports: 
       - 80:8080

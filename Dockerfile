@@ -1,10 +1,12 @@
 # base image
 FROM maven:3.6-alpine AS build
 WORKDIR /app/
-# copy src
-COPY . .
+# copy pom.xml
+COPY ./pom.xml .
 # download dependencies
 RUN mvn dependency:go-offline -B
+# copy src
+COPY . .
 # build
 RUN mvn compile && mvn package -Dmaven.test.skip=true
 

@@ -154,8 +154,13 @@ public class TodoController {
     @RequestMapping(value = "/todos", method = RequestMethod.GET)
     public ResponseEntity<?> getAllTodos(@RequestParam String state, Integer limit, Integer offset) {
         try {
-            String error = "";
-            if ((error = validInput(state, limit, offset)).isEmpty()) {
+            ArrayList<String> errors = null;
+            if ((errors = validInput(state, limit, offset)).isEmpty()) {
+                if (limit == null) {
+                    limit = 5;
+                } else if (offset == null) {
+                    offset = 0;
+                }
                 HttpStatus code = HttpStatus.OK;
                 List<Todo> list = (List<Todo>) todoRepo.findAll();
                 if (!state.equals("all")) {
@@ -167,7 +172,7 @@ public class TodoController {
                 l.setPage(offset);
                 return new ResponseEntity<>(l.getPageList(), code);
             } else {
-                return new ResponseEntity<String>(error, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -178,11 +183,11 @@ public class TodoController {
         ArrayList<String> output = new ArrayList<>();
         if (!(state.equalsIgnoreCase("all") || state.equalsIgnoreCase("unfinished"))) {
             output.add(createErrMsg("STATE_INVALID", "state must be ALL or UNFINISHED"));
-        } else if (limit == null || limit < 0) {
+        } else if (limit < 0) {
             output.add(createErrMsg("LIMIT_MIN", "limit must be greater or equal to 0"));
         } else if (limit > 10) {
             output.add(createErrMsg("LIMIT_MAX", "limit must be less or equal to 10"));
-        } else if (offset == null || offset < 0) {
+        } else if (offset < 0) {
             output.add(createErrMsg("OFFSET_MIN", "offset must be greater or equal to 0"));
         } else if (offset > 100) {
             output.add(createErrMsg("OFFSET_MAX", "offset must be less or equal to 100"));
@@ -199,6 +204,6 @@ public class TodoController {
      * @return Error in JSON
      */
     private String createErrMsg(String code, String msg) {
-        return "{'code': " + code + "'message':" + msg + "}";
+        return "{'code': '" + code + "'," + "'message':'" + msg + "'}";
     }
 }

@@ -77,9 +77,9 @@ public class TodoController {
      * @return confirmation
      */
     @RequestMapping(value = "/todos/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteTodo(@RequestBody Todo t) {
+    public ResponseEntity<String> deleteTodo(@PathVariable("id") int id) {
         try {
-            todoRepo.deleteById(t.getId());
+            todoRepo.deleteById(id);
             return new ResponseEntity<String>("Todo deleted.", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<String>("Todo not found.", HttpStatus.NOT_FOUND);

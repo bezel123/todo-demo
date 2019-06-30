@@ -1,14 +1,12 @@
 package com.example.tododemo.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
-import org.springframework.format.datetime.standard.InstantFormatter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import com.example.tododemo.dao.TodoRepository;
 import com.example.tododemo.model.Todo;
@@ -23,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TodoController {
+
+    @Autowired
     private TodoRepository todoRepo;
 
     public TodoController() {
@@ -54,32 +54,15 @@ public class TodoController {
      * @return confirmation
      */
     @RequestMapping(value = "/todos", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updateTodo(@RequestBody Todo t) {
+    public ResponseEntity<?> updateTodo(@RequestBody Todo t) {
         try {
-            if (t.getTitle().equals("")) {
-                return new ResponseEntity<String>("title must not be null", HttpStatus.PRECONDITION_FAILED);
+            ArrayList<String> error = null;
+            if ((error = validateInput(t.getTitle(), t.getDescription(), t.getDueDate())).isEmpty()) {
+                todoRepo.deleteById(t.getId());
+                todoRepo.save(t);
+                return new ResponseEntity<String>("Todo updated.", HttpStatus.OK);
             }
-            if (t.getTitle().length() < 1 || t.getTitle().length() > 30) {
-                return new ResponseEntity<String>("title size must be between 1 and 30",
-                        HttpStatus.PRECONDITION_FAILED);
-            }
-            if (t.getDescription().length() < 0 || t.getDescription().length() > 500) {
-                return new ResponseEntity<String>("description size must be between 0 and 500",
-                        HttpStatus.PRECONDITION_FAILED);
-            }
-            if (t.getDueDate().equals("")) {
-                return new ResponseEntity<String>("dueDate must not be null", HttpStatus.PRECONDITION_FAILED);
-            }
-            try {
-                Instant i = new InstantFormatter().parse(t.getDueDate(), Locale.GERMAN);
-                System.out.println(i.toString());
-            } catch (Exception e) {
-                return new ResponseEntity<String>("dueDate pattern must match \"yyyy-MM-ddTHH:mm:ssZ\"",
-                        HttpStatus.PRECONDITION_FAILED);
-            }
-            todoRepo.deleteById(t.getId());
-            todoRepo.save(t);
-            return new ResponseEntity<String>("Todo updated.", HttpStatus.OK);
+            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             return new ResponseEntity<String>("Todo not found.", HttpStatus.NOT_FOUND);
         }
@@ -114,30 +97,32 @@ public class TodoController {
     @RequestMapping(value = "/todos", method = RequestMethod.POST)
     public ResponseEntity<?> createTodo(@RequestBody Todo t) {
         try {
-            if (t.getTitle().equals("")) {
-                return new ResponseEntity<String>("title must not be null", HttpStatus.BAD_REQUEST);
+            ArrayList<String> error = null;
+            if ((error = validateInput(t.getTitle(), t.getDescription(), t.getDueDate())).isEmpty()) {
+                todoRepo.save(t);
+                return new ResponseEntity<Todo>(t, HttpStatus.OK);
             }
-            if (t.getTitle().length() < 1 || t.getTitle().length() > 30) {
-                return new ResponseEntity<String>("title size must be between 1 and 30", HttpStatus.BAD_REQUEST);
-            }
-            if (t.getDescription().length() < 0 || t.getDescription().length() > 500) {
-                return new ResponseEntity<String>("description size must be between 0 and 500", HttpStatus.BAD_REQUEST);
-            }
-            if (t.getDueDate().equals("")) {
-                return new ResponseEntity<String>("dueDate must not be null", HttpStatus.BAD_REQUEST);
-            }
-            try {
-                Instant i = new InstantFormatter().parse(t.getDueDate(), Locale.GERMAN);
-                System.out.println(i.toString());
-            } catch (Exception e) {
-                return new ResponseEntity<String>("dueDate pattern must match \"yyyy-MM-ddTHH:mm:ssZ\"",
-                        HttpStatus.BAD_REQUEST);
-            }
-            todoRepo.save(t);
-            return new ResponseEntity<Todo>(t, HttpStatus.OK);
+            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             return new ResponseEntity<String>("Invalid todo", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private ArrayList<String> validateInput(String title, String desc, Instant date) {
+        ArrayList<String> output = new ArrayList<>();
+        if (title.equals("")) {
+            output.add(createErrMsg("TITLE_NULL", "title must not be null"));
+        }
+        if (title.length() < 1 || title.length() > 30) {
+            output.add(createErrMsg("TITLE_SIZE", "title size must be between 1 and 30"));
+        }
+        if (desc.length() < 0 || desc.length() > 500) {
+            output.add(createErrMsg("DESCRIPTION_SIZE", "description size must be between 0 and 500"));
+        }
+        if (date == null) {
+            output.add(createErrMsg("DUEDATE_NULL", "dueDate must not be null"));
+        }
+        return output;
     }
 
     /**
@@ -151,48 +136,114 @@ public class TodoController {
      * @param offset Offset for the todos in the response
      * @return List of specified objects
      */
-    @RequestMapping(value = "/todos", method = RequestMethod.GET)
+    @RequestMapping(value = "/todos", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE })
     public ResponseEntity<?> getAllTodos(@RequestParam String state, Integer limit, Integer offset) {
         try {
-            ArrayList<String> errors = null;
-            if ((errors = validInput(state, limit, offset)).isEmpty()) {
-                if (limit == null) {
-                    limit = 5;
-                } else if (offset == null) {
-                    offset = 0;
-                }
-                HttpStatus code = HttpStatus.OK;
-                List<Todo> list = (List<Todo>) todoRepo.findAll();
-                if (!state.equals("all")) {
-                    list.removeIf(todo -> todo.isDone());
-                    code = HttpStatus.PARTIAL_CONTENT;
-                }
-                PagedListHolder<Todo> l = new PagedListHolder<Todo>(list);
-                l.setPageSize(limit);
-                l.setPage(offset);
-                return new ResponseEntity<>(l.getPageList(), code);
-            } else {
-                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            ArrayList<String> error = null;
+            // default values
+            if (state.equals("")) {
+                state = "unfinished";
             }
+            if (limit == null) {
+                limit = 5;
+            }
+            if (offset == null) {
+                offset = 0;
+            }
+            if ((error = validQueryInput(state, limit, offset)).isEmpty()) {
+                // get all todos
+                ArrayList<Todo> list = toList(todoRepo.findAll());
+                // check if empty
+                if (list.isEmpty()) {
+                    return new ResponseEntity<>("[]", HttpStatus.NO_CONTENT);
+                }
+                // filter finished
+                filterFinished(list, state);
+                // paginate
+                PagedListHolder<Todo> pl = new PagedListHolder<>(list);
+                pl.setPage(offset);
+                pl.setPageSize(limit);
+                // return list
+                return new ResponseEntity<>(pl.getPageList(), HttpStatus.PARTIAL_CONTENT);
+            }
+            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private ArrayList<String> validInput(String state, Integer limit, Integer offset) {
-        ArrayList<String> output = new ArrayList<>();
-        if (!(state.equalsIgnoreCase("all") || state.equalsIgnoreCase("unfinished"))) {
-            output.add(createErrMsg("STATE_INVALID", "state must be ALL or UNFINISHED"));
-        } else if (limit < 0) {
-            output.add(createErrMsg("LIMIT_MIN", "limit must be greater or equal to 0"));
-        } else if (limit > 10) {
-            output.add(createErrMsg("LIMIT_MAX", "limit must be less or equal to 10"));
-        } else if (offset < 0) {
-            output.add(createErrMsg("OFFSET_MIN", "offset must be greater or equal to 0"));
-        } else if (offset > 100) {
-            output.add(createErrMsg("OFFSET_MAX", "offset must be less or equal to 100"));
+    /**
+     * converts Iterable to list
+     * 
+     * @param i iterable to convert
+     * @return list from i
+     */
+    private ArrayList<Todo> toList(Iterable<Todo> i) {
+        try {
+            ArrayList<Todo> list = new ArrayList<>();
+            i.forEach((Todo todo) -> {
+                list.add(todo);
+            });
+            return list;
+        } catch (Exception e) {
+            System.err.println("[ERROR] parsing to List.");
+            return new ArrayList<>();
         }
-        return output;
+    }
+
+    /**
+     * 
+     * filter all finshed todos
+     * 
+     * @param list  list to filter
+     * @param state state of todo
+     */
+    private void filterFinished(ArrayList<Todo> list, String state) {
+        try {
+            if (state.equals("unfinished")) {
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).isDone()) {
+                        list.remove(i);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[ERROR] filtering List.");
+        }
+    }
+
+    /**
+     * 
+     * checks if the input is correct
+     * 
+     * @param state
+     * @param limit
+     * @param offset
+     * @return array with errors
+     */
+    private ArrayList<String> validQueryInput(String state, int limit, int offset) {
+        try {
+            ArrayList<String> output = new ArrayList<>();
+            if (!(state.equalsIgnoreCase("all") || state.equalsIgnoreCase("unfinished"))) {
+                output.add(createErrMsg("STATE_INVALID", "state must be ALL or UNFINISHED"));
+            }
+            if (limit < 0) {
+                output.add(createErrMsg("LIMIT_MIN", "limit must be greater or equal to 0"));
+            }
+            if (limit > 10) {
+                output.add(createErrMsg("LIMIT_MAX", "limit must be less or equal to 10"));
+            }
+            if (offset < 0) {
+                output.add(createErrMsg("OFFSET_MIN", "offset must be greater or equal to 0"));
+            }
+            if (offset > 100) {
+                output.add(createErrMsg("OFFSET_MAX", "offset must be less or equal to 100"));
+            }
+            return output;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     /**

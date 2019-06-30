@@ -1,5 +1,7 @@
 package com.example.tododemo.model;
 
+import java.time.Instant;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -22,7 +24,7 @@ public class Todo {
     private String description;
 
     @Column(name = "duedate", nullable = false)
-    private String dueDate;
+    private Instant dueDate;
 
     @Column(name = "done", nullable = false)
     private boolean done;
@@ -30,7 +32,7 @@ public class Todo {
     public Todo() {
     }
 
-    public Todo(String title, String description, String dueDate, boolean done) throws Exception {
+    public Todo(String title, String description, Instant dueDate, boolean done) throws Exception {
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
@@ -61,11 +63,11 @@ public class Todo {
         this.description = description;
     }
 
-    public String getDueDate() {
+    public Instant getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(String dueDate) {
+    public void setDueDate(Instant dueDate) {
         this.dueDate = dueDate;
     }
 

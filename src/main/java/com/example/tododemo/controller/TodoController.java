@@ -5,10 +5,9 @@ import org.springframework.beans.support.PagedListHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-import java.time.Instant;
 import java.util.ArrayList;
 
-import com.example.tododemo.dao.TodoRepository;
+import com.example.tododemo.repository.*;
 import com.example.tododemo.model.Todo;
 
 import org.springframework.http.ResponseEntity;
@@ -39,6 +38,7 @@ public class TodoController {
     @RequestMapping(value = "/todos/{id}", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE })
     public ResponseEntity<?> getTodo(@PathVariable("id") int id) {
         try {
+            System.out.println(todoRepo.findById(id).get().toJSON());
             return new ResponseEntity<Todo>(todoRepo.findById(id).get(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<String>(id + " not found", HttpStatus.NOT_FOUND);
@@ -57,12 +57,12 @@ public class TodoController {
     public ResponseEntity<?> updateTodo(@RequestBody Todo t) {
         try {
             ArrayList<String> error = null;
-            if ((error = validateInput(t.getTitle(), t.getDescription(), t.getDueDate())).isEmpty()) {
+            if ((error = validateInput(t)).isEmpty()) {
                 todoRepo.deleteById(t.getId());
                 todoRepo.save(t);
-                return new ResponseEntity<String>("Todo updated.", HttpStatus.OK);
+                return new ResponseEntity<String>("Todo updated.", HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<String>("Todo not found.", HttpStatus.NOT_FOUND);
         }
@@ -98,28 +98,34 @@ public class TodoController {
     public ResponseEntity<?> createTodo(@RequestBody Todo t) {
         try {
             ArrayList<String> error = null;
-            if ((error = validateInput(t.getTitle(), t.getDescription(), t.getDueDate())).isEmpty()) {
+            if ((error = validateInput(t)).isEmpty()) {
                 todoRepo.save(t);
-                return new ResponseEntity<Todo>(t, HttpStatus.OK);
+                return new ResponseEntity<Todo>(t, HttpStatus.CREATED);
             }
-            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            error.forEach((x) -> System.out.println(x.toString()));
+            return new ResponseEntity<>(error, HttpStatus.PRECONDITION_FAILED);
         } catch (Exception e) {
             return new ResponseEntity<String>("Invalid todo", HttpStatus.BAD_REQUEST);
         }
     }
 
-    private ArrayList<String> validateInput(String title, String desc, Instant date) {
+    /**
+     * validates Input
+     * 
+     * @param todo Object to validate
+     * @return ArrayList of errors
+     */
+    private ArrayList<String> validateInput(Todo todo) {
         ArrayList<String> output = new ArrayList<>();
-        if (title.equals("")) {
+        if (todo.getTitle().equals("")) {
             output.add(createErrMsg("TITLE_NULL", "title must not be null"));
-        }
-        if (title.length() < 1 || title.length() > 30) {
+        } else if (todo.getTitle().length() > 30) {
             output.add(createErrMsg("TITLE_SIZE", "title size must be between 1 and 30"));
         }
-        if (desc.length() < 0 || desc.length() > 500) {
+        if (todo.getDescription().length() > 500) {
             output.add(createErrMsg("DESCRIPTION_SIZE", "description size must be between 0 and 500"));
         }
-        if (date == null) {
+        if (todo.getDueDate() == null) {
             output.add(createErrMsg("DUEDATE_NULL", "dueDate must not be null"));
         }
         return output;

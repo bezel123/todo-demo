@@ -179,6 +179,15 @@ public class TodoController {
         }
     }
 
+    @RequestMapping(value = "/todos", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllTodo() {
+        try {
+            return new ResponseEntity<>(todoRepo.findAll(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<String>("[]", HttpStatus.NOT_FOUND);
+        }
+    }
+
     /**
      * converts Iterable to list
      * 

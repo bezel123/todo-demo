@@ -6,13 +6,10 @@
 --    done BOOLEAN
 --);
 
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge1','Its a mess','2018-08-27T12:34:56.789Z',false);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge2','Its a mess','2018-08-27T12:34:56.789Z',true);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge3','Its a mess','2018-08-27T12:34:56.789Z',false);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge4','Its a mess','2018-08-27T12:34:56.789Z',true);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge5','Its a mess','2018-08-27T12:34:56.789Z',false);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge6','Its a mess','2018-08-27T12:34:56.789Z',true);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge7','Its a mess','2018-08-27T12:34:56.789Z',false);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge8','Its a mess','2018-08-27T12:34:56.789Z',true);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge9','Its a mess','2018-08-27T12:34:56.789Z',false);
-INSERT INTO todos(title,description,duedate,done)VALUES ('clean fridge10','Its a mess','2018-08-27T12:34:56.789Z',true);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test','test object','1970-01-01T00:00:00Z',false);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test1','test object','1970-01-01T00:00:00Z',true);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test2','test object','1970-01-01T00:00:00Z',false);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test3','test object','1970-01-01T00:00:00Z',true);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test4','test object','1970-01-01T00:00:00Z',false);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test5','test object','1970-01-01T00:00:00Z',true);
+INSERT INTO todos(title,description,duedate,done)VALUES ('test6','test object','1970-01-01T00:00:00Z',false);
